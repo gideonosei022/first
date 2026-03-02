@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculator</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        input, select { margin: 5px; }
+        button { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Simple Calculator</h1>
+    <form id="calcForm">
+        <input type="number" step="any" id="operand1" placeholder="Operand 1" required>
+        <select id="operator">
+            <option value="+">+</option>
+            <option value="-">-</option>
+            <option value="*">*</option>
+            <option value="/">/</option>
+        </select>
+        <input type="number" step="any" id="operand2" placeholder="Operand 2" required>
+        <button type="submit">Calculate</button>
+    </form>
+
+    <h2>Result:</h2>
+    <div id="result"></div>
+
+    <h2>Past Calculations:</h2>
+    <ul id="history"></ul>
+
+    <script>
+        const form = document.getElementById('calcForm');
+        const resultDiv = document.getElementById('result');
+        const historyList = document.getElementById('history');
+
+        function loadHistory() {
+            fetch('/api/calculations/')
+                .then(res => res.json())
+                .then(data => {
+                    historyList.innerHTML = '';
+                    data.forEach(calc => {
+                        const li = document.createElement('li');
+                        li.textContent = `${calc.operand1} ${calc.operator} ${calc.operand2} = ${calc.result}`;
+                        historyList.appendChild(li);
+                    });
+                });
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const operand1 = parseFloat(document.getElementById('operand1').value);
+            const operand2 = parseFloat(document.getElementById('operand2').value);
+            const operator = document.getElementById('operator').value;
+
+            fetch('/api/calculations/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ operand1, operand2, operator })
+            })
+            .then(res => res.json())
+            .then(data => {
+                resultDiv.textContent = `Result: ${data.result}`;
+                loadHistory();
+            });
+        });
+
+        // Load history on page load
+        loadHistory();
+    </script>
+</body>
+</html>
